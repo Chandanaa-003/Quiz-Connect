@@ -17,7 +17,7 @@ import {
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
-import { getStudentQuizInstructions } from '../services/api';
+import { getStudentQuizInstructions, startQuiz } from '../services/api';
 
 export default function QuizInstructions() {
   const { id } = useParams();
@@ -25,6 +25,8 @@ export default function QuizInstructions() {
 
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState('');
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
 
@@ -50,13 +52,26 @@ export default function QuizInstructions() {
     }
   }, [id]);
 
-  const handleStartQuiz = () => {
+  const handleStartQuiz = async () => {
     if (!agreed) {
       alert('Please check and accept the quiz rules and instructions before proceeding.');
       return;
     }
-    // Navigate to the Phase 5 placeholder page as required
-    navigate(`/student/quizzes/${id}/placeholder`);
+
+    setStarting(true);
+    setStartError('');
+
+    try {
+      const res = await startQuiz(id);
+      navigate(`/student/attempts/${res.attempt_id}`);
+    } catch (err) {
+      setStartError(
+        err.response?.data?.detail ||
+        err.message ||
+        'Unable to start quiz at this time.'
+      );
+      setStarting(false);
+    }
   };
 
   if (loading) {
@@ -213,6 +228,17 @@ export default function QuizInstructions() {
           </label>
         </div>
 
+        {/* Error Alert if quiz cannot be started */}
+        {startError && (
+          <div className="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Unable to Start Quiz</p>
+              <p className="mt-0.5">{startError}</p>
+            </div>
+          </div>
+        )}
+
         {/* Action Controls */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
           <Link to="/student/dashboard" className="w-full sm:w-auto">
@@ -224,14 +250,23 @@ export default function QuizInstructions() {
             onClick={handleStartQuiz}
             variant="primary"
             size="md"
-            disabled={!agreed}
+            disabled={!agreed || starting}
             className={`w-full sm:w-auto justify-center ${
-              agreed
+              agreed && !starting
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
-            Start Quiz <ArrowRight className="w-4 h-4 ml-2" />
+            {starting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Initializing Exam...
+              </>
+            ) : (
+              <>
+                Start Quiz <ArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </Card>

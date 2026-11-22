@@ -28,6 +28,7 @@ class User(Base):
     # Relationships
     quizzes = relationship("Quiz", back_populates="teacher", cascade="all, delete-orphan")
     participations = relationship("QuizParticipation", back_populates="student", cascade="all, delete-orphan")
+    attempts = relationship("QuizAttempt", back_populates="student", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User id={self.id} email='{self.email}' role='{self.role}'>"

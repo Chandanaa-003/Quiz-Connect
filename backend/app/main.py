@@ -8,6 +8,9 @@ from app.models import (
     Quiz,
     QuizParticipation,
     User,
+    Question,
+    QuizAttempt,
+    Answer,
     generate_unique_quiz_code,
 )
 from app.routes import api_router
@@ -17,7 +20,7 @@ def init_and_migrate_db():
     """Ensure all tables and columns exist smoothly on startup."""
     Base.metadata.create_all(bind=engine)
 
-    # SQLite schema upgrade for new Quiz columns (quiz_code, total_questions)
+    # SQLite schema upgrade for Quiz columns (quiz_code, total_questions, randomize_questions)
     with engine.begin() as conn:
         try:
             res = conn.execute(text("PRAGMA table_info(quizzes)")).fetchall()
@@ -29,6 +32,9 @@ def init_and_migrate_db():
 
             if "total_questions" not in existing_cols:
                 conn.execute(text("ALTER TABLE quizzes ADD COLUMN total_questions INTEGER DEFAULT 0"))
+
+            if "randomize_questions" not in existing_cols:
+                conn.execute(text("ALTER TABLE quizzes ADD COLUMN randomize_questions BOOLEAN DEFAULT 0"))
 
             # Populate any existing quizzes that might lack a quiz_code
             unassigned_quizzes = conn.execute(text("SELECT id FROM quizzes WHERE quiz_code IS NULL")).fetchall()
@@ -43,7 +49,7 @@ init_and_migrate_db()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Scheduled online quiz management platform API with Student Discovery & JWT Authentication.",
+    description="Scheduled online quiz management platform API with Complete Quiz Engine & JWT Authentication.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -69,5 +75,5 @@ def read_root():
         "tagline": "Learn. Attend. Achieve.",
         "message": "Welcome to QuizConnect API. Visit /docs for interactive Swagger UI.",
         "status": "online",
-        "phase": "Phase 5: Student Dashboard & Quiz Discovery Active",
+        "phase": "Phase 6: Complete Quiz Engine Active",
     }

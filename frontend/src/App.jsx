@@ -21,8 +21,12 @@ import AvailableQuizzes from './pages/AvailableQuizzes';
 import JoinQuizPage from './pages/JoinQuizPage';
 import QuizInstructions from './pages/QuizInstructions';
 import QuizTakingPlaceholder from './pages/QuizTakingPlaceholder';
+import QuizTakingPage from './pages/QuizTakingPage';
+import QuizResultPage from './pages/QuizResultPage';
 import MyQuizHistory from './pages/MyQuizHistory';
 import StudentProfile from './pages/StudentProfile';
+import StudentPerformance from './pages/StudentPerformance';
+import QuizLeaderboardPage from './pages/QuizLeaderboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -196,11 +200,47 @@ export default function App() {
             }
           />
           <Route
+            path="/student/attempts/:attemptId"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <QuizTakingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/attempts/:attemptId/result"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <QuizResultPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/quizzes/history"
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentLayout>
                   <MyQuizHistory />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/performance"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <StudentPerformance />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/:id/leaderboard"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <QuizLeaderboardPage />
                 </StudentLayout>
               </ProtectedRoute>
             }

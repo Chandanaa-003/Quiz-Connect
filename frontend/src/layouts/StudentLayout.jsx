@@ -6,6 +6,7 @@ import {
   Calendar,
   CheckCircle2,
   History,
+  TrendingUp,
   User,
   LogOut,
   Menu,
@@ -30,6 +31,7 @@ export default function StudentLayout({ children }) {
     { label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
     { label: 'Upcoming Quizzes', path: '/student/quizzes/upcoming', icon: Calendar },
     { label: 'Available Quizzes', path: '/student/quizzes/available', icon: CheckCircle2 },
+    { label: 'Performance', path: '/student/performance', icon: TrendingUp },
     { label: 'My Quiz History', path: '/student/quizzes/history', icon: History },
     { label: 'Profile', path: '/student/profile', icon: User },
   ];

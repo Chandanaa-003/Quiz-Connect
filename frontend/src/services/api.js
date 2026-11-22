@@ -120,6 +120,94 @@ export const getStudentQuizInstructions = async (quizId) => {
   return response.data;
 };
 
+// --- Phase 6: Quiz Engine Endpoints ---
+
+export const startQuiz = async (quizId) => {
+  const response = await api.post(`/api/student/quizzes/${quizId}/start`);
+  return response.data;
+};
+
+export const getAttemptDetail = async (attemptId) => {
+  const response = await api.get(`/api/student/attempts/${attemptId}`);
+  return response.data;
+};
+
+export const saveAttemptAnswer = async (attemptId, questionId, payload) => {
+  const response = await api.put(`/api/student/attempts/${attemptId}/answers/${questionId}`, payload);
+  return response.data;
+};
+
+export const submitAttempt = async (attemptId, payload = {}) => {
+  const response = await api.post(`/api/student/attempts/${attemptId}/submit`, payload);
+  return response.data;
+};
+
+export const getAttemptResult = async (attemptId) => {
+  const response = await api.get(`/api/student/attempts/${attemptId}/result`);
+  return response.data;
+};
+
+// --- Teacher Questions API ---
+
+export const getTeacherQuizQuestions = async (quizId) => {
+  const response = await api.get(`/api/teacher/quizzes/${quizId}/questions`);
+  return response.data;
+};
+
+export const addTeacherQuizQuestion = async (quizId, payload) => {
+  const response = await api.post(`/api/teacher/quizzes/${quizId}/questions`, payload);
+  return response.data;
+};
+
+export const deleteTeacherQuizQuestion = async (quizId, questionId) => {
+  const response = await api.delete(`/api/teacher/quizzes/${quizId}/questions/${questionId}`);
+  return response.data;
+};
+
+// --- Phase 7: Analytics, Reports & Leaderboards ---
+
+export const getTeacherAnalyticsOverview = async () => {
+  const response = await api.get('/api/teacher/analytics/overview');
+  return response.data;
+};
+
+export const getTeacherQuizAnalytics = async (quizId) => {
+  const response = await api.get(`/api/teacher/quizzes/${quizId}/analytics`);
+  return response.data;
+};
+
+export const getTeacherQuizLeaderboard = async (quizId) => {
+  const response = await api.get(`/api/teacher/quizzes/${quizId}/leaderboard`);
+  return response.data;
+};
+
+export const downloadTeacherQuizReportCsv = async (quizId) => {
+  const response = await api.get(`/api/teacher/quizzes/${quizId}/report/csv`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const getStudentAnalyticsOverview = async () => {
+  const response = await api.get('/api/student/analytics/overview');
+  return response.data;
+};
+
+export const getStudentAnalyticsPerformance = async () => {
+  const response = await api.get('/api/student/analytics/performance');
+  return response.data;
+};
+
+export const getStudentQuizLeaderboard = async (quizId) => {
+  const response = await api.get(`/api/student/quizzes/${quizId}/leaderboard`);
+  return response.data;
+};
+
+export const getStudentQuizResultByQuizId = async (quizId) => {
+  const response = await api.get(`/api/student/quizzes/${quizId}/result`);
+  return response.data;
+};
+
 // --- System Health Endpoint ---
 
 export const checkHealth = async () => {

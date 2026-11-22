@@ -37,6 +37,7 @@ class Quiz(Base):
     status = Column(String(20), nullable=False, default=QuizStatus.DRAFT.value)
     quiz_code = Column(String(20), unique=True, index=True, nullable=True)
     total_questions = Column(Integer, nullable=False, default=0)
+    randomize_questions = Column(Boolean, nullable=False, default=False)
     teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(
         DateTime(timezone=True),
@@ -47,6 +48,13 @@ class Quiz(Base):
     # Relationships
     teacher = relationship("User", back_populates="quizzes")
     participations = relationship("QuizParticipation", back_populates="quiz", cascade="all, delete-orphan")
+    questions = relationship(
+        "Question",
+        back_populates="quiz",
+        cascade="all, delete-orphan",
+        order_by="Question.order_index",
+    )
+    attempts = relationship("QuizAttempt", back_populates="quiz", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Quiz id={self.id} title='{self.title}' status='{self.status}' code='{self.quiz_code}'>"

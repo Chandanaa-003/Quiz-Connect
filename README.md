@@ -118,4 +118,7 @@ npm run dev
 - [x] **Phase 2: Complete Authentication System** (Argon2 password hashing, JWT tokens, RBAC, Teacher/Student Login & Register, Protected Dashboards)
 - [x] **Phase 3: Teacher Dashboard and Quiz Management** (Responsive sidebar, Create/Edit/Delete Quiz, Schedule validation, My Quizzes table, Search & Filters)
 - [x] **Phase 5: Student Dashboard & Quiz Discovery** (Student Workspace, Upcoming Quizzes, Available Live Quizzes, Quiz Code Access, Briefing/Instructions Page, Quiz History, Duplicate Prevention)
-- [ ] **Phase 6: Quiz-Taking Engine & Evaluation** (Timed Question Engine, Auto Submission, Real-time Scoring)
+- [x] **Phase 6: Complete Quiz Engine & Evaluation** (Live Exam Interface, Countdown Timer, Question Randomization, Real-time Answer Auto-saving, Auto/Manual Submission, Backend Automatic Evaluation, Result & Grade Breakdown)
+- [x] **Phase 7: Leaderboard and Analytics System** (Teacher Analytics Overview, Recharts Data Visualizations, Score Distribution, Pass/Fail Proportions, Item-by-item Question Analysis, Public Student Leaderboard with Tied-Rank Handling, Student Performance Dashboard, CSV Gradebook Export)
+- [ ] **Phase 8: Advanced Proctoring & Notifications** (Upcoming)
+
