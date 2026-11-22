@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 import enum
+import secrets
+import string
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -10,6 +12,13 @@ class QuizStatus(str, enum.Enum):
     SCHEDULED = "scheduled"
     PUBLISHED = "published"
     COMPLETED = "completed"
+
+
+def generate_unique_quiz_code() -> str:
+    """Generate a high-entropy 6-character alphanumeric uppercase quiz code (e.g. QC-74892)."""
+    chars = string.ascii_uppercase + string.digits
+    suffix = "".join(secrets.choice(chars) for _ in range(6))
+    return f"QC-{suffix}"
 
 
 class Quiz(Base):
@@ -26,6 +35,8 @@ class Quiz(Base):
     maximum_marks = Column(Integer, nullable=False)
     passing_marks = Column(Integer, nullable=False)
     status = Column(String(20), nullable=False, default=QuizStatus.DRAFT.value)
+    quiz_code = Column(String(20), unique=True, index=True, nullable=True)
+    total_questions = Column(Integer, nullable=False, default=0)
     teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(
         DateTime(timezone=True),
@@ -35,6 +46,7 @@ class Quiz(Base):
 
     # Relationships
     teacher = relationship("User", back_populates="quizzes")
+    participations = relationship("QuizParticipation", back_populates="quiz", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Quiz id={self.id} title='{self.title}' status='{self.status}' teacher_id={self.teacher_id}>"
+        return f"<Quiz id={self.id} title='{self.title}' status='{self.status}' code='{self.quiz_code}'>"

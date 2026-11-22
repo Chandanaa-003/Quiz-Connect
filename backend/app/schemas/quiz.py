@@ -81,6 +81,8 @@ class QuizResponse(BaseModel):
     maximum_marks: int
     passing_marks: int
     status: str
+    quiz_code: Optional[str] = None
+    total_questions: int = 0
     teacher_id: int
     created_at: datetime
 

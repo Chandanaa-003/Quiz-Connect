@@ -88,10 +88,35 @@ export const deleteTeacherQuiz = async (quizId) => {
   return response.data;
 };
 
-// --- Student Endpoints ---
+// --- Student Endpoints (Phase 5) ---
 
 export const getStudentDashboard = async () => {
   const response = await api.get('/api/student/dashboard');
+  return response.data;
+};
+
+export const getStudentUpcomingQuizzes = async () => {
+  const response = await api.get('/api/student/quizzes/upcoming');
+  return response.data;
+};
+
+export const getStudentAvailableQuizzes = async () => {
+  const response = await api.get('/api/student/quizzes/available');
+  return response.data;
+};
+
+export const getStudentQuizHistory = async () => {
+  const response = await api.get('/api/student/quizzes/history');
+  return response.data;
+};
+
+export const joinStudentQuiz = async (payload) => {
+  const response = await api.post('/api/student/quizzes/join', payload);
+  return response.data;
+};
+
+export const getStudentQuizInstructions = async (quizId) => {
+  const response = await api.get(`/api/student/quizzes/${quizId}/instructions`);
   return response.data;
 };
 

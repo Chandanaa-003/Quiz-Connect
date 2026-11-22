@@ -15,6 +15,15 @@ from app.schemas.quiz import (
     TeacherDashboardStats,
     TeacherDashboardData,
 )
+from app.schemas.student import (
+    StudentQuizItemResponse,
+    StudentJoinQuizRequest,
+    StudentJoinQuizResponse,
+    QuizInstructionsResponse,
+    StudentHistoryItemResponse,
+    StudentDashboardStats,
+    StudentDashboardResponse,
+)
 
 __all__ = [
     "HealthCheckResponse",
@@ -30,4 +39,11 @@ __all__ = [
     "QuizResponse",
     "TeacherDashboardStats",
     "TeacherDashboardData",
+    "StudentQuizItemResponse",
+    "StudentJoinQuizRequest",
+    "StudentJoinQuizResponse",
+    "QuizInstructionsResponse",
+    "StudentHistoryItemResponse",
+    "StudentDashboardStats",
+    "StudentDashboardResponse",
 ]

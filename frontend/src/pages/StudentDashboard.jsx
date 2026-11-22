@@ -1,260 +1,374 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  GraduationCap,
-  LogOut,
-  KeyRound,
-  Clock,
-  CheckCircle2,
   Calendar,
-  Layers,
-  ShieldCheck,
-  Award,
-  AlertCircle,
-  Loader2,
-  Sparkles,
+  CheckCircle2,
+  Clock,
+  History,
+  KeyRound,
   ArrowRight,
+  Sparkles,
+  BookOpen,
+  Award,
+  Loader2,
+  AlertCircle,
+  Users,
 } from 'lucide-react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
-import { getStudentDashboard } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { getStudentDashboard, joinStudentQuiz } from '../services/api';
 
 export default function StudentDashboard() {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [quizCode, setQuizCode] = useState('');
+
+  // Quick Join Form State
+  const [quickCode, setQuickCode] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState('');
+
+  const fetchDashboard = async () => {
+    setLoading(true);
+    try {
+      const data = await getStudentDashboard();
+      setDashboardData(data);
+      setError('');
+    } catch (err) {
+      setError(
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to load student dashboard.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      setLoading(true);
-      try {
-        const data = await getStudentDashboard();
-        setDashboardData(data);
-      } catch (err) {
-        setError(
-          err.response?.data?.detail ||
-          err.message ||
-          'Failed to load student dashboard. Session may have expired.'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboard();
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/', { replace: true });
+  const handleQuickJoin = async (e) => {
+    e.preventDefault();
+    if (!quickCode.trim()) {
+      setJoinError('Please enter a valid quiz code.');
+      return;
+    }
+
+    setJoining(true);
+    setJoinError('');
+
+    try {
+      const res = await joinStudentQuiz({ quiz_code: quickCode.trim().toUpperCase() });
+      const targetId = res.quiz_id || res.quiz?.id;
+      navigate(`/student/quizzes/${targetId}/instructions`);
+    } catch (err) {
+      setJoinError(
+        err.response?.data?.detail ||
+        err.message ||
+        'Could not join quiz with this code.'
+      );
+    } finally {
+      setJoining(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mb-4" />
-        <p className="text-sm font-medium text-slate-600">Loading Student Workspace...</p>
-      </div>
-    );
-  }
+  const rawStats = dashboardData?.stats || {};
+  const stats = {
+    total_attended: rawStats.total_quizzes_attended ?? rawStats.total_attended ?? 0,
+    upcoming_quizzes_count: rawStats.upcoming_quizzes ?? rawStats.upcoming_quizzes_count ?? 0,
+    available_quizzes_count: rawStats.available_quizzes ?? rawStats.available_quizzes_count ?? 0,
+    completed_quizzes_count: rawStats.completed_quizzes ?? rawStats.completed_quizzes_count ?? 0,
+  };
+
+  const recentActivities = dashboardData?.recent_activity || dashboardData?.recent_activities || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      {/* Top Banner / Welcome Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
-            <GraduationCap className="w-7 h-7" />
+    <div className="space-y-6">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white p-6 sm:p-8 shadow-sm">
+        <div className="relative z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-xs font-medium mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
+            <span>Student Learning Hub</span>
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {dashboardData?.message || `Welcome, ${user?.full_name}`}
-              </h1>
-              <Badge variant="emerald" size="sm">
-                Student
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Student Email: <span className="text-slate-700">{user?.email}</span> • Candidate ID: #{user?.id}
-            </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Welcome back, {user?.full_name || 'Student'}! 👋
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-emerald-50">
+            Discover scheduled quizzes, join live test sessions with your quiz code, and keep track of your academic progress.
+          </p>
+
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Link
+              to="/student/quizzes/available"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-emerald-800 text-xs sm:text-sm font-semibold hover:bg-emerald-50 transition-colors shadow-sm"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              View Live Quizzes
+            </Link>
+            <Link
+              to="/student/quizzes/upcoming"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700/50 hover:bg-emerald-700/70 text-white text-xs sm:text-sm font-medium transition-colors border border-white/20"
+            >
+              <Calendar className="w-4 h-4 text-emerald-200" />
+              Upcoming Schedule
+            </Link>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-          <Button
-            variant="outlineSlate"
-            size="md"
-            icon={LogOut}
-            iconPosition="left"
-            onClick={handleLogout}
-          >
-            Sign Out
-          </Button>
-        </div>
+        {/* Decorative background glow */}
+        <div className="absolute right-0 bottom-0 translate-x-10 translate-y-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
       {error && (
-        <div className="mb-8 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <div>{error}</div>
         </div>
       )}
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card hover={false} className="border-slate-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Quizzes Attended
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Attended */}
+        <Card className="border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Total Attended
+              </p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                {loading ? '...' : stats.total_attended}
+              </h3>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <BookOpen className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">
-            {dashboardData?.stats?.quizzes_attended ?? 0}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1">Quiz taking unlocks in Phase 4</p>
+          <p className="text-[11px] text-slate-400 mt-3">Quizzes participated</p>
         </Card>
 
-        <Card hover={false} className="border-slate-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Upcoming Scheduled
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
+        {/* Upcoming Quizzes */}
+        <Card className="border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Upcoming Quizzes
+              </p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                {loading ? '...' : stats.upcoming_quizzes_count}
+              </h3>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Calendar className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">
-            {dashboardData?.stats?.upcoming_quizzes ?? 0}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1">Accessible via unique quiz code</p>
+          <Link
+            to="/student/quizzes/upcoming"
+            className="text-[11px] text-blue-600 hover:text-blue-700 font-medium mt-3 inline-flex items-center gap-1"
+          >
+            Check schedule <ArrowRight className="w-3 h-3" />
+          </Link>
         </Card>
 
-        <Card hover={false} className="border-slate-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Average Score
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Award className="w-4 h-4" />
+        {/* Live Available */}
+        <Card className="border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Available Now
+              </p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                {loading ? '...' : stats.available_quizzes_count}
+              </h3>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">
-            {dashboardData?.stats?.average_score ?? 'N/A'}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1">Evaluated across all tests</p>
+          <Link
+            to="/student/quizzes/available"
+            className="text-[11px] text-amber-600 hover:text-amber-700 font-medium mt-3 inline-flex items-center gap-1"
+          >
+            Take test now <ArrowRight className="w-3 h-3" />
+          </Link>
         </Card>
 
-        <Card hover={false} className="border-slate-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Attendance Rate
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
+        {/* Completed Quizzes */}
+        <Card className="border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Completed
+              </p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                {loading ? '...' : stats.completed_quizzes_count}
+              </h3>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Award className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">
-            {dashboardData?.stats?.attendance_rate ?? '100%'}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1">On-time session attendance</p>
+          <Link
+            to="/student/quizzes/history"
+            className="text-[11px] text-purple-600 hover:text-purple-700 font-medium mt-3 inline-flex items-center gap-1"
+          >
+            View score history <ArrowRight className="w-3 h-3" />
+          </Link>
         </Card>
       </div>
 
-      {/* Main Content Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Quiz Attendance Preview */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+      {/* Main Grid: Quick Code Join + Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Join Card (1 col) */}
+        <Card className="border-slate-200 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <KeyRound className="w-4 h-4" />
+              </div>
+              <h2 className="text-base font-bold text-slate-900">Join With Quiz Code</h2>
+            </div>
+            <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+              Have a 6-character access code from your instructor? Enter it here to access your quiz instructions instantly.
+            </p>
+
+            <form onSubmit={handleQuickJoin} className="space-y-4">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Join Scheduled Quiz</h2>
-                <p className="text-xs text-slate-500">Enter your 6-digit access code provided by your instructor</p>
+                <label htmlFor="quickCode" className="block text-xs font-medium text-slate-700 mb-1.5">
+                  Quiz Code
+                </label>
+                <div className="relative">
+                  <input
+                    id="quickCode"
+                    type="text"
+                    value={quickCode}
+                    onChange={(e) => setQuickCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. QC789A"
+                    maxLength={10}
+                    className="w-full px-3.5 py-2.5 text-sm uppercase font-mono tracking-widest text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
               </div>
-              <Badge variant="emerald" size="sm" icon={Sparkles}>
-                Phase 4 Feature
-              </Badge>
+
+              {joinError && (
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{joinError}</span>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                disabled={joining || !quickCode.trim()}
+                className="w-full justify-center bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                {joining ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Validating Code...
+                  </>
+                ) : (
+                  <>
+                    Join Quiz Now
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+            Tip: Your instructor generates quiz codes when a quiz is published.
+          </div>
+        </Card>
+
+        {/* Recent Quiz Activity (2 cols) */}
+        <Card className="border-slate-200 p-6 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-slate-500" />
+              <h2 className="text-base font-bold text-slate-900">Recent Quiz Activity</h2>
             </div>
+            <Link
+              to="/student/quizzes/history"
+              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+            >
+              View Full History <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
 
-            <div className="max-w-md mx-auto py-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-                <KeyRound className="w-6 h-6" />
-              </div>
+          {loading ? (
+            <div className="py-12 text-center">
+              <Loader2 className="w-6 h-6 text-emerald-600 animate-spin mx-auto mb-2" />
+              <p className="text-xs text-slate-400">Loading your recent activities...</p>
+            </div>
+          ) : recentActivities.length > 0 ? (
+            <div className="divide-y divide-slate-100">
+              {recentActivities.map((act) => (
+                <div key={act.id} className="py-3.5 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-semibold text-slate-900 truncate">
+                      {act.title || act.quiz_title}
+                    </h4>
+                    <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                      <span>{act.subject}</span>
+                      <span>•</span>
+                      <span>
+                        Instructor: {act.teacher_name}
+                      </span>
+                    </p>
+                  </div>
 
-              <h3 className="text-sm font-semibold text-slate-800 mb-2">
-                Have a Quiz Code Ready?
-              </h3>
-              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-                Student authentication and session verification are fully operational.
-                The live quiz taking engine, synchronized timer, and auto-submit will be delivered in Phase 4.
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Badge
+                      variant={
+                        act.quiz_status === 'published'
+                          ? 'emerald'
+                          : act.quiz_status === 'scheduled'
+                          ? 'blue'
+                          : 'slate'
+                      }
+                      size="sm"
+                    >
+                      {act.quiz_status || 'available'}
+                    </Badge>
+                    <Link
+                      to={`/student/quizzes/${act.id}/instructions`}
+                      className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                    >
+                      View <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-slate-400">
+              <History className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-xs font-medium text-slate-600">No recent quiz activity</p>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">
+                Once you join or complete quizzes, your participation record and scores will appear here.
               </p>
-
-              <div className="flex gap-2 max-w-xs mx-auto">
-                <input
-                  type="text"
-                  placeholder="e.g. QC-9482"
-                  value={quizCode}
-                  onChange={(e) => setQuizCode(e.target.value.toUpperCase())}
-                  disabled
-                  className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-center uppercase tracking-widest font-mono text-slate-500 cursor-not-allowed"
-                />
-                <Button
-                  variant="primary"
-                  size="md"
-                  disabled
-                  className="bg-emerald-600 hover:bg-emerald-700 shrink-0 cursor-not-allowed opacity-60"
-                  icon={ArrowRight}
-                  iconPosition="right"
+              <div className="mt-4">
+                <Link
+                  to="/student/quizzes/available"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
                 >
-                  Join
-                </Button>
+                  Browse available live quizzes <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </div>
-          </Card>
-        </div>
-
-        {/* Right Col: Security & Session Status */}
-        <div className="space-y-6">
-          <Card className="border-slate-200">
-            <div className="flex items-center gap-2 pb-4 border-b border-slate-100 mb-4">
-              <ShieldCheck className="w-5 h-5 text-emerald-600" />
-              <h3 className="text-sm font-bold text-slate-900">Session Security Diagnostics</h3>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-                <span className="text-slate-500">Authentication</span>
-                <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Active (JWT Bearer)
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-                <span className="text-slate-500">Password Hashing</span>
-                <span className="font-semibold text-slate-800">Argon2id Encrypted</span>
-              </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-                <span className="text-slate-500">Authorized Role</span>
-                <Badge variant="emerald" size="sm">student</Badge>
-              </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-                <span className="text-slate-500">Endpoint Access</span>
-                <span className="font-mono text-[11px] text-slate-700">/api/student/dashboard</span>
-              </div>
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-slate-500">Backend Database</span>
-                <span className="font-semibold text-slate-800">SQLite Connected</span>
-              </div>
-            </div>
-          </Card>
-        </div>
+          )}
+        </Card>
       </div>
     </div>
   );

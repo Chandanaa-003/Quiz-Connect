@@ -5,7 +5,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.quiz import Quiz, QuizStatus
+from app.models.quiz import Quiz, QuizStatus, generate_unique_quiz_code
 from app.models.user import User
 from app.schemas.quiz import (
     QuizCreateRequest,
@@ -66,7 +66,6 @@ def get_teacher_dashboard(
     current_teacher: User = Depends(get_current_teacher),
     db: Session = Depends(get_db),
 ):
-    # Synchronize time-sensitive statuses
     sync_teacher_quiz_statuses(db, current_teacher.id)
 
     total_quizzes = db.query(Quiz).filter(Quiz.teacher_id == current_teacher.id).count()
@@ -184,6 +183,11 @@ def create_quiz(
         elif now >= end:
             status_val = QuizStatus.COMPLETED.value
 
+    # Generate unique quiz code
+    unique_code = generate_unique_quiz_code()
+    while db.query(Quiz).filter(Quiz.quiz_code == unique_code).first():
+        unique_code = generate_unique_quiz_code()
+
     new_quiz = Quiz(
         title=payload.title.strip(),
         description=payload.description.strip() if payload.description else None,
@@ -195,6 +199,8 @@ def create_quiz(
         maximum_marks=payload.maximum_marks,
         passing_marks=payload.passing_marks,
         status=status_val,
+        quiz_code=unique_code,
+        total_questions=0,
         teacher_id=current_teacher.id,
     )
 
@@ -341,7 +347,6 @@ def update_quiz(
 
     if payload.status is not None:
         status_val = payload.status.value
-        # Rule check: cannot publish before start time
         if status_val == QuizStatus.PUBLISHED.value and now < start:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

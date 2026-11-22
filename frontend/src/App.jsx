@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import TeacherLayout from './layouts/TeacherLayout';
+import StudentLayout from './layouts/StudentLayout';
 import LandingPage from './pages/LandingPage';
 import TeacherLogin from './pages/TeacherLogin';
 import TeacherRegister from './pages/TeacherRegister';
@@ -15,6 +16,13 @@ import EditQuiz from './pages/EditQuiz';
 import TeacherReports from './pages/TeacherReports';
 import TeacherProfile from './pages/TeacherProfile';
 import StudentDashboard from './pages/StudentDashboard';
+import UpcomingQuizzes from './pages/UpcomingQuizzes';
+import AvailableQuizzes from './pages/AvailableQuizzes';
+import JoinQuizPage from './pages/JoinQuizPage';
+import QuizInstructions from './pages/QuizInstructions';
+import QuizTakingPlaceholder from './pages/QuizTakingPlaceholder';
+import MyQuizHistory from './pages/MyQuizHistory';
+import StudentProfile from './pages/StudentProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -126,14 +134,84 @@ export default function App() {
             }
           />
 
-          {/* Protected Student Routes with MainLayout */}
+          {/* Protected Student Routes with StudentLayout */}
           <Route
             path="/student/dashboard"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <MainLayout>
+                <StudentLayout>
                   <StudentDashboard />
-                </MainLayout>
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/upcoming"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <UpcomingQuizzes />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/available"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <AvailableQuizzes />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/join"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <JoinQuizPage />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/:id/instructions"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <QuizInstructions />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/:id/placeholder"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <QuizTakingPlaceholder />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/quizzes/history"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <MyQuizHistory />
+                </StudentLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/profile"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout>
+                  <StudentProfile />
+                </StudentLayout>
               </ProtectedRoute>
             }
           />

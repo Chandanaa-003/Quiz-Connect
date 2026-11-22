@@ -10,7 +10,7 @@ QuizConnect is a scheduled online quiz management platform designed for modern a
 
 ### Frontend
 - **Framework:** React.js (v18+) with Vite
-- **Styling:** Tailwind CSS (Modern Blue & White SaaS theme)
+- **Styling:** Tailwind CSS (Modern Blue, Emerald & Slate SaaS theme)
 - **Routing:** React Router DOM (v6+) with Protected Role Guards
 - **HTTP Client:** Axios (Configured with JWT Bearer Interceptors)
 - **Icons:** Lucide React
@@ -43,9 +43,16 @@ QuizConnect/
 │   │   │   ├── EditQuiz.jsx
 │   │   │   ├── TeacherReports.jsx
 │   │   │   ├── TeacherProfile.jsx
-│   │   │   └── StudentDashboard.jsx
-│   │   ├── layouts/         # MainLayout, TeacherLayout (sidebar navigation)
-│   │   ├── services/        # Axios API client (Auth, Teacher Quizzes, Health)
+│   │   │   ├── StudentDashboard.jsx
+│   │   │   ├── UpcomingQuizzes.jsx
+│   │   │   ├── AvailableQuizzes.jsx
+│   │   │   ├── JoinQuizPage.jsx
+│   │   │   ├── QuizInstructions.jsx
+│   │   │   ├── QuizTakingPlaceholder.jsx
+│   │   │   ├── MyQuizHistory.jsx
+│   │   │   └── StudentProfile.jsx
+│   │   ├── layouts/         # MainLayout, TeacherLayout, StudentLayout (sidebar navigation)
+│   │   ├── services/        # Axios API client (Auth, Teacher Quizzes, Student Quizzes, Health)
 │   │   ├── context/         # AuthContext (JWT persistence, user state, auto-refresh)
 │   │   ├── App.jsx          # Protected route mapping & role guards
 │   │   ├── main.jsx         # React application entry point
@@ -59,13 +66,13 @@ QuizConnect/
 │   └── .env
 ├── backend/
 │   ├── app/
-│   │   ├── models/          # SQLAlchemy ORM models (User, Quiz, UserRole, QuizStatus)
-│   │   ├── schemas/         # Pydantic validation schemas (User, Quiz, Auth, Dashboard, Health)
+│   │   ├── models/          # SQLAlchemy ORM models (User, Quiz, QuizParticipation)
+│   │   ├── schemas/         # Pydantic validation schemas (User, Quiz, Student, Auth, Dashboard, Health)
 │   │   ├── routes/          # API controllers (health, auth, teacher, student)
 │   │   ├── services/        # Security & Auth dependencies (Argon2, JWT signing, role checking)
 │   │   ├── config.py        # Centralized settings (CORS, JWT secret, expiry)
 │   │   ├── database.py      # SQLite connection & session management
-│   │   └── main.py          # FastAPI application factory
+│   │   └── main.py          # FastAPI application factory & schema migrations
 │   ├── requirements.txt
 │   ├── .env.example
 │   └── .env
@@ -77,9 +84,10 @@ QuizConnect/
 
 ## 🛡️ Security & Role-Based Access Control (RBAC)
 
-- **Strict Multi-Tenant Isolation:** Teachers can only access, view, modify, and delete quizzes they created. Attempts to query or mutate another teacher's quiz return `HTTP 403 Forbidden`.
-- **Role Permissions:** Endpoints under `/api/teacher/*` require the `teacher` role (`HTTP 403 Forbidden` for students). Unauthenticated requests return `HTTP 401 Unauthorized`.
-- **Scheduling Rules:** End times must strictly follow start times. A quiz cannot be set to `published` before its scheduled start time has arrived.
+- **Student API Protection:** Endpoints under `/api/student/*` require an active authenticated user with the `student` role (`HTTP 403 Forbidden` for teachers).
+- **Teacher API Protection:** Endpoints under `/api/teacher/*` require the `teacher` role (`HTTP 403 Forbidden` for students).
+- **Sanitized Information Exposure:** Student quiz discovery endpoints never expose questions, draft quizzes, or teacher account credentials. Only public details (`title`, `subject`, `teacher_name`, `start_time`, `end_time`, `duration_minutes`, `maximum_marks`) are returned.
+- **Participation Integrity:** Duplicate quiz registrations are prevented via the `uq_student_quiz_participation` database unique constraint. Expired or draft quizzes cannot be joined.
 
 ---
 
@@ -109,4 +117,5 @@ npm run dev
 - [x] **Phase 1: Project Initialization** (Folder structure, FastAPI, SQLite, Tailwind, React, CORS, Health Check)
 - [x] **Phase 2: Complete Authentication System** (Argon2 password hashing, JWT tokens, RBAC, Teacher/Student Login & Register, Protected Dashboards)
 - [x] **Phase 3: Teacher Dashboard and Quiz Management** (Responsive sidebar, Create/Edit/Delete Quiz, Schedule validation, My Quizzes table, Search & Filters)
-- [ ] **Phase 4: Question Management & Student Quiz Taking** (Upcoming)
+- [x] **Phase 5: Student Dashboard & Quiz Discovery** (Student Workspace, Upcoming Quizzes, Available Live Quizzes, Quiz Code Access, Briefing/Instructions Page, Quiz History, Duplicate Prevention)
+- [ ] **Phase 6: Quiz-Taking Engine & Evaluation** (Timed Question Engine, Auto Submission, Real-time Scoring)
